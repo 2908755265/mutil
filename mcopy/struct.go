@@ -10,7 +10,7 @@ var (
 	ErrNotSupport       = errors.New("only support string and number field")
 )
 
-func CopySameNamedField(dest any, src any) error {
+func CopySameNamedField(dest any, src any, skipZero bool) error {
 	drt := reflect.TypeOf(dest)
 	if drt.Kind() != reflect.Pointer {
 		return ErrDestIsNotPointer
@@ -29,6 +29,11 @@ func CopySameNamedField(dest any, src any) error {
 		if dvf.IsValid() {
 			svf := srv.Field(i)
 			if dvf.Kind() == svf.Kind() {
+				// skip zero value
+				if skipZero && svf.IsZero() {
+					continue
+				}
+
 				err := setFieldVal(dvf, svf, dvf.Kind())
 				if err != nil {
 					return err
@@ -41,6 +46,7 @@ func CopySameNamedField(dest any, src any) error {
 }
 
 func setFieldVal(dest reflect.Value, src reflect.Value, t reflect.Kind) error {
+	println(dest.IsZero(), src.IsZero())
 	switch t {
 	case reflect.String:
 		dest.SetString(src.String())
